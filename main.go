@@ -7,10 +7,10 @@ import (
 
 func main() {
 
-	conn, err := client.Connect("localhost:5671")
+	conn, err := client.Connect("localhost:8080")
 	if err != nil {
 		log.Panicf(err.Error())
 	}
-	ch, err := conn.CreateChannel()
+	_, err = conn.CreateChannel()
 
 }

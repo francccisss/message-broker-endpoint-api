@@ -48,7 +48,7 @@ func (c connection) CreateChannel() (Channel, error) {
 func Connect(address string) (connection, error) {
 	conn := make(chan net.Conn)
 	stopped := make(chan int)
-	go connectTCP("localhost:5671", conn, stopped)
+	go connectTCP(address, conn, stopped)
 
 	// waiting for succesful tcp connection
 	for {
