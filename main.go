@@ -10,10 +10,16 @@ func main() {
 	if err != nil {
 		log.Panicf(err.Error())
 	}
-	_, err = conn.CreateChannel("Queue", "Somewhere", "P2P", true)
+	ch, err := conn.CreateChannel()
 	if err != nil {
 		log.Panicf(err.Error())
 	}
+	log.Println("Successfully created a new Channel")
+	chName, err := ch.AssertQueue("route", "P2P", false)
+	if err != nil {
+		log.Panicf(err.Error())
+	}
+	log.Println(chName)
 
 	loop := make(chan struct{})
 	<-loop

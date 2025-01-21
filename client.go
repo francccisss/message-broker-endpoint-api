@@ -47,13 +47,6 @@ func connectTCP(address string, c chan net.Conn, stopped chan int) {
 	log.Printf("Successfully Connected to message broker on %s", address)
 	c <- conn
 }
-
-/*
-  - Name is used to route endpoint messages to the specified queue,
-    which then pushes messages to consumers that are subscribe to it,
-  - Type could be `P2P` (point to point) or `PSB` (pub-sub) model,
-  - Durable persists data in the queue
-*/
 func (c connection) CreateChannel() (Channel, error) {
 	newStreamID := uuid.NewString()
 	ch := Channel{
@@ -81,16 +74,36 @@ type ChannelHandler interface {
 	CloseChannel()
 }
 
-func (ch Channel) AssertQueue(Name string, MessageType string, Type string, Durable bool) (string, error) {
+type Queue struct {
+	MessageType string
+	Name        string
+	Type        string
+	Durable     bool
+}
+
+type EPMessage struct {
+	MessageType string
+	Route       string
+	Type        string
+	Body        any
+}
+
+/*
+  - Name is used to route endpoint messages to the specified queue,
+    which then pushes messages to consumers that are subscribe to it,
+  - Type could be 'P2P' (point to point) or 'PUBSUB' (pub-sub) model,
+  - Durable persists data in the queue
+*/
+func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, error) {
 	q := Queue{
-		Name,
-		MessageType,
-		Type,
-		Durable,
+		Name:        Name,
+		MessageType: "Queue",
+		Type:        Type,
+		Durable:     Durable,
 	}
 	b, err := json.Marshal(q)
 	if err != nil {
-		fmt.Printf("ERROR: Unable to marshal queue message")
+		fmt.Printf("ERROR: Unable to Marshal Queue Message")
 		return "", err
 	}
 
@@ -108,34 +121,39 @@ func (ch Channel) AssertQueue(Name string, MessageType string, Type string, Dura
 	return q.Name, nil
 }
 
-func (ch Channel) DeliverMessage() {
+/*
+Do i need QueueType??
+*/
+func (ch Channel) DeliverMessage(Route string, Message interface{}, QueueType string) error {
+	emsg := EPMessage{
+		MessageType: "EPMessage",
+		Route:       Route,
+		Type:        QueueType,
+		Body:        Message,
+	}
+
+	b, err := json.Marshal(emsg)
+	if err != nil {
+		log.Println("ERROR: Unable to Marshal EPMessage")
+		return err
+	}
+
+	c := *ch.conn
+	_, err = c.Write(b)
+
+	if errors.Is(err, io.EOF) {
+		fmt.Printf("ERROR: connection was closed")
+		return err
+	}
+	if err != nil {
+		fmt.Printf("ERROR: Unable to write to message broker")
+		return err
+	}
+	return nil
 }
 
 func (ch Channel) Consume() {
 }
 
 func (ch Channel) CloseChannel() {
-}
-
-type Queue struct {
-	MessageType string
-	Name        string
-	Type        string
-	Durable     bool
-}
-
-type EPMessage struct {
-	MessageType string
-	Route       string
-	Type        string
-	Body        any
-}
-
-func CreateEPMessage(MessageType string, Route string, Type string, Body any) EPMessage {
-	return EPMessage{
-		MessageType,
-		Route,
-		Type,
-		Body,
-	}
 }
