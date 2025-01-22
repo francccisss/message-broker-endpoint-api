@@ -85,7 +85,7 @@ type EPMessage struct {
 	MessageType string
 	Route       string
 	Type        string
-	Body        any
+	Body        []byte
 }
 
 /*
@@ -124,7 +124,8 @@ func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, e
 /*
 Do i need QueueType??
 */
-func (ch Channel) DeliverMessage(Route string, Message interface{}, QueueType string) error {
+func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string) error {
+	log.Println("Delivering Message")
 	emsg := EPMessage{
 		MessageType: "EPMessage",
 		Route:       Route,

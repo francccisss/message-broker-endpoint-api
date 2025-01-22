@@ -20,6 +20,10 @@ func main() {
 		log.Panicf(err.Error())
 	}
 	log.Println(chName)
+	err = ch.DeliverMessage("route", []byte("Hello"), "P2P")
+	if err != nil {
+		log.Println(err.Error())
+	}
 
 	loop := make(chan struct{})
 	<-loop
