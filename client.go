@@ -44,6 +44,7 @@ func connectTCP(address string, c chan net.Conn, stopped chan int) {
 	log.Printf("Successfully Connected to message broker on %s", address)
 	c <- conn
 }
+
 func (c connection) CreateChannel() (Channel, error) {
 	newStreamID := uuid.NewString()
 	ch := Channel{

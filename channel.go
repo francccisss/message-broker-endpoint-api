@@ -13,6 +13,7 @@ type Channel struct {
 	StreamID string
 	BoundTo  string
 	conn     net.Conn
+	chanBuff chan EPMessage
 }
 
 type ChannelHandler interface {
@@ -99,7 +100,18 @@ func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string)
 	return nil
 }
 
-func (ch Channel) Consume() {
+// - Route to consume messages from
+func (ch Channel) Consume(route string) <-chan EPMessage {
+	r, exists := RouteTable[route]
+	if !exists {
+		// This channel will consume any message on specified route
+		RouteTable[route] = Route{
+			Name:     route,
+			channels: []*Channel{&ch},
+		}
+	}
+	r.channels = append(r.channels, &ch)
+	return ch.chanBuff
 }
 
 func (ch Channel) CloseChannel() {

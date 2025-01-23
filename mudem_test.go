@@ -1,17 +1,38 @@
 package main
 
-import "testing"
+import (
+	"log"
+	"net"
+	"testing"
+)
 
 func TestMudem(t *testing.T) {
 
-	conn, err := Connect("localhost:8080")
+	conn, err := Connect("localhost:5671")
 	if err != nil {
 		t.Fatal(err.Error())
 	}
+	go Mudem(conn.conn)
 
 	ch, err := conn.CreateChannel()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	ch.Consume()
+	_ = ch.Consume("route")
+	log.Println("Not Blocked")
+
+	loop := make(chan struct{})
+	<-loop
+}
+
+func Mudem(c net.Conn) {
+	for {
+		buf := make([]byte, 10)
+		_, err := c.Read(buf)
+		if err != nil {
+			log.Println("Return some error")
+			return
+		}
+	}
+
 }
