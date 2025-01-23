@@ -13,7 +13,7 @@ import (
 type Channel struct {
 	StreamID string
 	BoundTo  string
-	conn     net.Conn
+	conn     *net.Conn
 	chanBuff chan msgType.EPMessage
 }
 
@@ -43,7 +43,7 @@ func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, e
 		return "", err
 	}
 
-	_, err = ch.conn.Write(b)
+	_, err = *(ch.conn).Write(b)
 	if errors.Is(err, io.EOF) {
 		fmt.Printf("ERROR: connection was closed")
 		return "", err

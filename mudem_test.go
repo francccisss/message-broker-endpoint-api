@@ -22,6 +22,10 @@ func TestMudem(t *testing.T) {
 	}
 	_ = ch.Consume("route")
 	log.Println("Not Blocked")
+	err = ch.DeliverMessage("route", []byte("hello"), "P2P")
+	if err != nil {
+		log.Panic(err.Error())
+	}
 
 	loop := make(chan struct{})
 	<-loop
