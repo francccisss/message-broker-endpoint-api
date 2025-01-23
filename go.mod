@@ -1,4 +1,4 @@
-module github.com/francccisss/message-broker-endpoint-api
+module message-broker-endpoint-api
 
 go 1.23.2
 

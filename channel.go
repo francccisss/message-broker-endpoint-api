@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	msgType "message-broker-endpoint-api/internal/types"
 	"net"
 )
 
@@ -13,7 +14,7 @@ type Channel struct {
 	StreamID string
 	BoundTo  string
 	conn     net.Conn
-	chanBuff chan EPMessage
+	chanBuff chan msgType.EPMessage
 }
 
 type ChannelHandler interface {
@@ -23,20 +24,6 @@ type ChannelHandler interface {
 	CloseChannel()
 }
 
-type Queue struct {
-	MessageType string
-	Name        string
-	Type        string
-	Durable     bool
-}
-
-type EPMessage struct {
-	MessageType string
-	Route       string
-	Type        string
-	Body        []byte
-}
-
 /*
   - Name is used to route endpoint messages to the specified queue,
     which then pushes messages to consumers that are subscribe to it,
@@ -44,7 +31,7 @@ type EPMessage struct {
   - Durable persists data in the queue
 */
 func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, error) {
-	q := Queue{
+	q := msgType.Queue{
 		Name:        Name,
 		MessageType: "Queue",
 		Type:        Type,
@@ -74,7 +61,7 @@ Do i need QueueType??
 */
 func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string) error {
 	log.Println("Delivering Message")
-	emsg := EPMessage{
+	emsg := msgType.EPMessage{
 		MessageType: "EPMessage",
 		Route:       Route,
 		Type:        QueueType,
@@ -101,7 +88,11 @@ func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string)
 }
 
 // - Route to consume messages from
-func (ch Channel) Consume(route string) <-chan EPMessage {
+// creating a route table for streams where if a message of route x is received by the mudem,
+// it will try to pattern match the message's data type, parse it and read the route name in
+// the message's header, if it exists in the table, the channels/streams connected on that route,
+// will receive a message through their chanBuff channel buffer
+func (ch Channel) Consume(route string) <-chan msgType.EPMessage {
 	r, exists := RouteTable[route]
 	if !exists {
 		// This channel will consume any message on specified route

@@ -33,6 +33,10 @@ func Mudem(c net.Conn) {
 			log.Println("Return some error")
 			return
 		}
+		// Do pattern matching,
+		//  - Do RouteTable look up after parsing
+		// Error receiving,
+		// Parse message
 	}
 
 }
