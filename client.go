@@ -19,7 +19,7 @@ const MAX_STREAMS = 3
 var STREAM_POOL = make(map[string]*Channel)
 
 type connection struct {
-	conn *net.Conn
+	conn net.Conn
 }
 
 func Connect(address string) (connection, error) {
@@ -31,7 +31,7 @@ func Connect(address string) (connection, error) {
 	for {
 		select {
 		case c := <-conn:
-			return connection{conn: &c}, nil
+			return connection{conn: c}, nil
 		case <-stopped:
 			return connection{}, fmt.Errorf("Unable to create a TCP connection with the message broker")
 		}
@@ -64,7 +64,7 @@ func (c connection) CreateChannel() (Channel, error) {
 type Channel struct {
 	StreamID string
 	BoundTo  string
-	conn     *net.Conn
+	conn     net.Conn
 }
 
 type ChannelHandler interface {
@@ -107,8 +107,7 @@ func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, e
 		return "", err
 	}
 
-	c := *ch.conn
-	_, err = c.Write(b)
+	_, err = ch.conn.Write(b)
 	if errors.Is(err, io.EOF) {
 		fmt.Printf("ERROR: connection was closed")
 		return "", err
@@ -139,8 +138,7 @@ func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string)
 		return err
 	}
 
-	c := *ch.conn
-	_, err = c.Write(b)
+	_, err = ch.conn.Write(b)
 
 	if errors.Is(err, io.EOF) {
 		fmt.Printf("ERROR: connection was closed")
