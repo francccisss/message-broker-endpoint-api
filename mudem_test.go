@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	msgType "message-broker-endpoint-api/internal/types"
+	"message-broker-endpoint-api/internal/utils"
 	"net"
 	"testing"
 )
@@ -33,10 +35,35 @@ func Mudem(c net.Conn) {
 			log.Println("Return some error")
 			return
 		}
-		// Do pattern matching,
-		//  - Do RouteTable look up after parsing
-		// Error receiving,
-		// Parse message
-	}
 
+		// Message Parsing
+		endpointMsg, err := utils.MessageParser(buf)
+		if err != nil {
+			log.Println(err.Error())
+		}
+		// Pattern matching,
+		switch msg := endpointMsg.(type) {
+		case msgType.EPMessage:
+			// Do a RouteTable Lookup
+			MessageDispatcher(msg)
+		case msgType.Queue:
+			log.Println(msg.MessageType)
+		case msgType.ErrorMessage:
+			log.Println(msg.MessageType)
+
+		}
+	}
+}
+
+func MessageDispatcher(msg msgType.EPMessage) {
+	log.Println(msg.MessageType)
+	route, exists := RouteTable[msg.Route]
+	if !exists {
+		log.Println("Route does not exist")
+		log.Println("Do nothing")
+		return
+	}
+	for _, channel := range route.channels {
+		channel.chanBuff <- msg
+	}
 }

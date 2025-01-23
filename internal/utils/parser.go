@@ -7,11 +7,12 @@ import (
 	protocol "message-broker-endpoint-api/internal/types"
 )
 
-// Given an empty interface where it can store any value and be represented as any type,
-// we need to assert that its of some known type by matching the "MessageType" of the incoming message,
-// once the "MessageType" of the message is known, we can then Unmarashal the message into the specified
-// known type that matched the "MessageType"
+// Takes in the incoming message from the message broker server
 func MessageParser(message []byte) (interface{}, error) {
+	// Given an empty interface where it can store any value and be represented as any type,
+	// we need to assert that its of some known type by matching the "MessageType" of the incoming message,
+	// once the "MessageType" of the message is known, we can then Unmarashal the message into the specified
+	// known type that matched the "MessageType"
 	var tmp map[string]interface{}
 	err := json.Unmarshal(message, &tmp)
 	if err != nil {
