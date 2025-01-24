@@ -1,8 +1,10 @@
 package main
 
 import (
-// "log"
-// "net"
+	"log"
+	msgType "message-broker-endpoint-api/internal/types"
+	"message-broker-endpoint-api/internal/utils"
+	"net"
 )
 
 type Route struct {
@@ -14,14 +16,43 @@ var RouteTable = map[string]Route{}
 
 // Multiplexer/Demultiplexer takes in the socket connection
 // Mudem will handle the demultiplexing of messages from incoming tcp connection
-// func Mudem(c net.Conn) {
-// 	for {
-// 		buf := make([]byte, 10)
-// 		_, err := c.Read(buf)
-// 		if err != nil {
-// 			log.Println("Return some error")
-// 			return
-// 		}
-// 	}
-//
-// }
+func Mudem(c net.Conn) {
+	for {
+		buf := make([]byte, 10)
+		_, err := c.Read(buf)
+		if err != nil {
+			log.Println("Return some error")
+			return
+		}
+
+		// Message Parsing
+		endpointMsg, err := utils.MessageParser(buf)
+		if err != nil {
+			log.Println(err.Error())
+		}
+		// Pattern matching,
+		switch msg := endpointMsg.(type) {
+		case msgType.EPMessage:
+			// Do a RouteTable Lookup
+			MessageDispatcher(msg)
+		case msgType.Queue:
+			log.Println(msg.MessageType)
+		case msgType.ErrorMessage:
+			log.Println(msg.MessageType)
+
+		}
+	}
+}
+
+func MessageDispatcher(msg msgType.EPMessage) {
+	log.Println(msg.MessageType)
+	route, exists := RouteTable[msg.Route]
+	if !exists {
+		log.Println("Route does not exist")
+		log.Println("Do nothing")
+		return
+	}
+	for _, channel := range route.channels {
+		channel.chanBuff <- msg
+	}
+}
