@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 
@@ -20,31 +19,14 @@ type connection struct {
 }
 
 func Connect(address string) (connection, error) {
-	conn := make(chan net.Conn)
-	stopped := make(chan error)
-	go connectTCP(address, conn, stopped)
-	// waiting for succesful tcp connection
-	for {
-		select {
-		case c := <-conn:
-			return connection{conn: c}, nil
-		case err := <-stopped:
-			log.Println("ERROR: Unable to create a TCP connection with the message broker")
-			return connection{}, err
-		}
-	}
-}
-
-func connectTCP(address string, c chan net.Conn, stopped chan error) {
 	conn, err := net.Dial("tcp", address) // need to change this
 	if err != nil {
-		stopped <- err
 		log.Println(err.Error())
-		return
+		return connection{}, err
 	}
 	go Mudem(conn)
 	log.Printf("Successfully Connected to message broker on %s", address)
-	c <- conn
+	return connection{conn}, nil
 }
 
 func (c connection) CreateChannel() (Channel, error) {
@@ -57,6 +39,5 @@ func (c connection) CreateChannel() (Channel, error) {
 	if !exists {
 		STREAM_POOL[newStreamID] = &ch
 	}
-
 	return ch, nil
 }

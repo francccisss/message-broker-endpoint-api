@@ -35,6 +35,7 @@ func Mudem(c net.Conn) {
 		case msgType.EPMessage:
 			// Do a RouteTable Lookup
 			MessageDispatcher(msg)
+			// I still dont know what to do with different message types
 		case msgType.Queue:
 			log.Println(msg.MessageType)
 		case msgType.ErrorMessage:
