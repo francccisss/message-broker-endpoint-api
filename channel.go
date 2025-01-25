@@ -93,6 +93,7 @@ func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string)
 // the message's header, if it exists in the table, the channels/streams connected on that route,
 // will receive a message through their chanBuff channel buffer
 func (ch Channel) Consume(route string) <-chan msgType.EPMessage {
+	log.Printf("Consuming from %s\n", route)
 	r, exists := RouteTable[route]
 	if !exists {
 		// This channel will consume any message on specified route

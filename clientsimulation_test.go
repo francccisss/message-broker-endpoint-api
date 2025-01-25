@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"sync"
 	"testing"
 )
 
@@ -12,9 +14,24 @@ const (
 
 func TestClientSimulation(t *testing.T) {
 
+	var wg sync.WaitGroup
+
+	for provTag := range PRV_COUNT {
+		wg.Add(1)
+		go providers(&wg, provTag)
+	}
+
+	wg.Wait()
+	for consTag := range CONS_COUNT {
+		go consumers(consTag)
+	}
+	loop := make(chan struct{})
+	<-loop
+	fmt.Println("Simulation Ended")
 }
 
-func providers() {
+func providers(wg *sync.WaitGroup, tag int) {
+	defer fmt.Printf("Provider #%d exited\n", tag)
 	conn, err := Connect("localhost:5671")
 	if err != nil {
 		log.Panic(err.Error())
@@ -33,12 +50,11 @@ func providers() {
 	if err != nil {
 		log.Println(err.Error())
 	}
-
-	loop := make(chan struct{})
-	<-loop
+	wg.Done()
 }
 
-func consumers() {
+func consumers(tag int) {
+	defer fmt.Printf("Consumer #%d exited\n", tag)
 	conn, err := Connect("localhost:5671")
 	if err != nil {
 		log.Panic(err.Error())
@@ -55,6 +71,6 @@ func consumers() {
 
 	msg := ch.Consume("route")
 	m := <-msg
-	log.Printf("NOTIF: Received Message from route: %s", string(m.Body))
+	log.Printf("NOTIF: Received Message from route: %s\n", string(m.Body))
 
 }
