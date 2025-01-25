@@ -6,7 +6,7 @@ import (
 
 func main() {
 
-	conn, err := Connect("localhost:8080")
+	conn, err := Connect("localhost:5671")
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -14,7 +14,7 @@ func main() {
 	if err != nil {
 		log.Panic(err.Error())
 	}
-	log.Println("Successfully created a new Channel")
+	log.Println("NOTIF: Successfully created a new Channel")
 	chName, err := ch.AssertQueue("route", "P2P", false)
 	if err != nil {
 		log.Panic(err.Error())

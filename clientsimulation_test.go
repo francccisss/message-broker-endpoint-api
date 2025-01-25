@@ -15,7 +15,7 @@ func TestClientSimulation(t *testing.T) {
 }
 
 func providers() {
-	conn, err := Connect("localhost:8080")
+	conn, err := Connect("localhost:5671")
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -23,7 +23,7 @@ func providers() {
 	if err != nil {
 		log.Panic(err.Error())
 	}
-	log.Println("Successfully created a new Channel")
+	log.Println("NOTIF: Successfully created a new Channel")
 	chName, err := ch.AssertQueue("route", "P2P", false)
 	if err != nil {
 		log.Panic(err.Error())
@@ -39,7 +39,7 @@ func providers() {
 }
 
 func consumers() {
-	conn, err := Connect("localhost:8080")
+	conn, err := Connect("localhost:5671")
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -47,7 +47,7 @@ func consumers() {
 	if err != nil {
 		log.Panic(err.Error())
 	}
-	log.Println("Successfully created a new Channel")
+	log.Println("NOTIF: Successfully created a new Channel")
 	_, err = ch.AssertQueue("route", "P2P", false)
 	if err != nil {
 		log.Panic(err.Error())
@@ -55,6 +55,6 @@ func consumers() {
 
 	msg := ch.Consume("route")
 	m := <-msg
-	log.Printf("Received Message from route: %s", string(m.Body))
+	log.Printf("NOTIF: Received Message from route: %s", string(m.Body))
 
 }

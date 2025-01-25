@@ -25,7 +25,7 @@ func Connect(address string) (connection, error) {
 		return connection{}, err
 	}
 	go Mudem(conn)
-	log.Printf("Successfully Connected to message broker on %s", address)
+	log.Printf("NOTIF: Successfully Connected to message broker on %s", address)
 	return connection{conn}, nil
 }
 

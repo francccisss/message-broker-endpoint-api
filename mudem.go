@@ -21,7 +21,7 @@ func Mudem(c net.Conn) {
 		buf := make([]byte, 10)
 		_, err := c.Read(buf)
 		if err != nil {
-			log.Println("Return some error")
+			log.Println("NOTIF: Return some error")
 			return
 		}
 
@@ -49,8 +49,8 @@ func MessageDispatcher(msg msgType.EPMessage) {
 	log.Println(msg.MessageType)
 	route, exists := RouteTable[msg.Route]
 	if !exists {
-		log.Println("Route does not exist")
-		log.Println("Do nothing")
+		log.Println("NOTIF: Route does not exist")
+		log.Println("NOTIF: Do nothing")
 		return
 	}
 	for _, channel := range route.channels {
