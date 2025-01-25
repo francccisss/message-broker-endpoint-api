@@ -28,7 +28,10 @@ func Mudem(c net.Conn) {
 		// Message Parsing
 		endpointMsg, err := utils.MessageParser(buf)
 		if err != nil {
+			log.Println("ERROR: Something when wrong with the message parser")
 			log.Println(err.Error())
+			// just log the error dont process it any further
+			continue
 		}
 		// Pattern matching,
 		switch msg := endpointMsg.(type) {
@@ -40,7 +43,9 @@ func Mudem(c net.Conn) {
 			log.Println(msg.MessageType)
 		case msgType.ErrorMessage:
 			log.Println(msg.MessageType)
-
+			log.Println(string(msg.Body))
+		default:
+			log.Println("ERROR: Message not of any known type")
 		}
 	}
 }
