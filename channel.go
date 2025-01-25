@@ -87,6 +87,11 @@ func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string)
 	return nil
 }
 
+type Consumer struct {
+	MessageType string
+	Route       string
+}
+
 // - Route to consume messages from
 // creating a route table for streams where if a message of route x is received by the mudem,
 // it will try to pattern match the message's data type, parse it and read the route name in
@@ -103,6 +108,19 @@ func (ch Channel) Consume(route string) <-chan msgType.EPMessage {
 		}
 	}
 	r.channels = append(r.channels, &ch)
+
+	b, err := json.Marshal(Consumer{
+		MessageType: "Consumer",
+		Route:       route,
+	})
+	if err != nil {
+		log.Println("ERROR: Unable Marshal Consume Message")
+	}
+	_, err = ch.conn.Write(b)
+	if err != nil {
+		log.Println("ERROR: Unable to create a consumer")
+	}
+
 	return ch.chanBuff
 }
 
