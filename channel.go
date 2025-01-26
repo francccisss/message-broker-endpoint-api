@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -68,13 +70,31 @@ func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string)
 		Body:        Message,
 	}
 
-	b, err := json.Marshal(emsg)
+	body, err := json.Marshal(emsg)
 	if err != nil {
 		log.Println("ERROR: Unable to Marshal EPMessage")
 		return err
 	}
 
-	_, err = ch.conn.Write(b)
+	prefixBuf := make([]byte, 4)
+	_, err = binary.Encode(prefixBuf, binary.LittleEndian, len(body))
+	if err != nil {
+		log.Println("ERROR: Unable to encode prefix length to binary encoding")
+		return err
+	}
+	var bufWriter bytes.Buffer
+	_, err = bufWriter.Write(prefixBuf)
+	if err != nil {
+		log.Println("ERROR: Unable write prefix to buffer")
+		return err
+	}
+	_, err = bufWriter.Write(body)
+	if err != nil {
+		log.Println("ERROR: Unable write message body to buffer")
+		return err
+	}
+
+	_, err = ch.conn.Write(bufWriter.Bytes())
 
 	if errors.Is(err, io.EOF) {
 		fmt.Printf("ERROR: connection was closed")
