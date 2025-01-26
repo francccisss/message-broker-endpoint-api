@@ -76,23 +76,27 @@ func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string)
 		return err
 	}
 
+	// convert decimal to uint32
 	prefixBuf := make([]byte, 4)
-	_, err = binary.Encode(prefixBuf, binary.LittleEndian, len(body))
-	if err != nil {
-		log.Println("ERROR: Unable to encode prefix length to binary encoding")
-		return err
-	}
+	binary.LittleEndian.PutUint32(prefixBuf, uint32(len(body)))
 	var bufWriter bytes.Buffer
 	_, err = bufWriter.Write(prefixBuf)
 	if err != nil {
 		log.Println("ERROR: Unable write prefix to buffer")
 		return err
 	}
+
+	value := binary.LittleEndian.Uint32(bufWriter.Bytes())
+	log.Printf("Message Body Size to be sent: %d\n", value)
+	log.Printf("Message Body Size to be sent in slice: %+v\n", prefixBuf)
+
 	_, err = bufWriter.Write(body)
 	if err != nil {
 		log.Println("ERROR: Unable write message body to buffer")
 		return err
 	}
+
+	log.Printf("Total: %+v\n", bufWriter.Bytes())
 
 	_, err = ch.conn.Write(bufWriter.Bytes())
 

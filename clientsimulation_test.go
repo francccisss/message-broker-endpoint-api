@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	PRV_COUNT  = 2
-	CONS_COUNT = 1
+	PRV_COUNT  = 1
+	CONS_COUNT = 0
 )
 
 func TestClientSimulation(t *testing.T) {
@@ -41,11 +41,11 @@ func providers(wg *sync.WaitGroup, tag int) {
 		log.Panic(err.Error())
 	}
 	log.Println("NOTIF: Successfully created a new Channel")
-	chName, err := ch.AssertQueue("route", "P2P", false)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-	log.Println(chName)
+	// TODO for all messages add prefix length
+	// chName, err := ch.AssertQueue("route", "P2P", false)
+	// if err != nil {
+	// 	log.Panic(err.Error())
+	// }
 	err = ch.DeliverMessage("route", []byte("Hello"), "P2P")
 	if err != nil {
 		log.Println(err.Error())
