@@ -32,6 +32,10 @@ type ChannelHandler interface {
   - Durable persists data in the queue
 */
 func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, error) {
+	log.Println("Asserting a Queue")
+
+	// TODO Something wrong with this, server is not able to parse
+	// message from queue assertion for some reason
 	q := msgType.Queue{
 		Name:        Name,
 		MessageType: "Queue",
@@ -44,7 +48,13 @@ func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, e
 		return "", err
 	}
 
-	_, err = ch.conn.Write(b)
+	appQBuff, err := utils.AppendPrefixLength(b)
+
+	if err != nil {
+		fmt.Printf("ERROR: Unable to append queue message prefix length")
+		return "", err
+	}
+	_, err = ch.conn.Write(appQBuff)
 	if errors.Is(err, io.EOF) {
 		fmt.Printf("ERROR: connection was closed")
 		return "", err
@@ -121,7 +131,11 @@ func (ch Channel) Consume(route string) <-chan msgType.EPMessage {
 	if err != nil {
 		log.Println("ERROR: Unable Marshal Consume Message")
 	}
-	_, err = ch.conn.Write(b)
+	appConsBuff, err := utils.AppendPrefixLength(b)
+	if err != nil {
+		fmt.Printf("ERROR: Unable to append consumer message prefix length")
+	}
+	_, err = ch.conn.Write(appConsBuff)
 	if err != nil {
 		log.Println("ERROR: Unable to create a consumer")
 	}

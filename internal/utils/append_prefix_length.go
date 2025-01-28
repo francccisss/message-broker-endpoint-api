@@ -28,6 +28,6 @@ func AppendPrefixLength(b []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	log.Printf("Total: %+v\n", bufWriter.Bytes())
+	log.Printf("Total: %+v\n", bufWriter.Len())
 	return bufWriter.Bytes(), nil
 }

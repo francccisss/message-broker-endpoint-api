@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	PRV_COUNT  = 1
-	CONS_COUNT = 0
+	PRV_COUNT  = 3
+	CONS_COUNT = 1
 )
 
 func TestClientSimulation(t *testing.T) {
@@ -41,11 +41,10 @@ func providers(wg *sync.WaitGroup, tag int) {
 		log.Panic(err.Error())
 	}
 	log.Println("NOTIF: Successfully created a new Channel")
-	// TODO for all messages add prefix length
-	// chName, err := ch.AssertQueue("route", "P2P", false)
-	// if err != nil {
-	// 	log.Panic(err.Error())
-	// }
+	_, err = ch.AssertQueue("route", "P3P", false)
+	if err != nil {
+		log.Panic(err.Error())
+	}
 	err = ch.DeliverMessage("route", []byte("Hello"), "P2P")
 	if err != nil {
 		log.Println(err.Error())
@@ -70,6 +69,8 @@ func consumers(tag int) {
 	}
 
 	msg := ch.Consume("route")
+
+	log.Println("Waiting for message to consume")
 	m := <-msg
 	log.Printf("NOTIF: Received Message from route: %s\n", string(m.Body))
 
