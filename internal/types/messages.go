@@ -6,6 +6,7 @@ type Queue struct {
 	Name        string
 	Type        string
 	Durable     bool
+	StreamID    string
 }
 
 type EPMessage struct {
@@ -14,9 +15,13 @@ type EPMessage struct {
 	Route       string
 	Type        string
 	Body        []byte
+	StreamID    string
 }
+
+// TODO Figure out how to handle errors from different requests
 type ErrorMessage struct {
 	MessageSize uint32
 	MessageType string
 	Body        []byte
+	StreamID    string
 }
