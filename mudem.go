@@ -4,61 +4,58 @@ import (
 	"log"
 	msgType "message-broker-endpoint-api/internal/types"
 	"message-broker-endpoint-api/internal/utils"
-	"net"
 )
 
-type Route struct {
-	Name     string
-	channels []*Channel
-}
-
-var RouteTable = map[string]Route{}
+const READ_SIZE = 1024
+const HEADER_SIZE = 4
 
 // Multiplexer/Demultiplexer takes in the socket connection
 // Mudem will handle the demultiplexing of messages from incoming tcp connection
-func Mudem(c net.Conn) {
-	for {
-		buf := make([]byte, 10)
-		_, err := c.Read(buf)
-		if err != nil {
-			log.Println("NOTIF: Return some error")
-			return
-		}
+// using message dispatch based on the message's type
+func Mudem(incomingMessage []byte) {
 
-		// Message Parsing
-		endpointMsg, err := utils.MessageParser(buf)
-		if err != nil {
-			log.Println("ERROR: Something when wrong with the message parser")
-			log.Println(err.Error())
-			// just log the error dont process it any further
-			continue
-		}
-		// Pattern matching,
-		switch msg := endpointMsg.(type) {
-		case msgType.EPMessage:
-			// Do a RouteTable Lookup
-			MessageDispatcher(msg)
-			// I still dont know what to do with different message types
-		case msgType.Queue:
-			log.Println(msg.MessageType)
-		case msgType.ErrorMessage:
-			log.Println(msg.MessageType)
-			log.Println(string(msg.Body))
-		default:
-			log.Println("ERROR: Message not of any known type")
-		}
-	}
-}
-
-func MessageDispatcher(msg msgType.EPMessage) {
-	log.Println(msg.MessageType)
-	route, exists := RouteTable[msg.Route]
-	if !exists {
-		log.Println("NOTIF: Route does not exist")
-		log.Println("NOTIF: Do nothing")
+	msg, err := utils.MessageParser(incomingMessage)
+	if err != nil {
+		log.Printf("ERROR: Unable to parse message")
+		log.Println(err.Error())
 		return
 	}
-	for _, channel := range route.channels {
-		channel.chanBuff <- msg
+
+	// type assertion switch statement for different processing
+
+	switch m := msg.(type) {
+	case msgType.EPMessage:
+		log.Println(m.MessageType)
+
+		route, exists := RouteTable[m.Route]
+		if !exists {
+			log.Println("NOTIF: Route does not exist")
+			log.Println("NOTIF: Do nothing")
+			return
+		}
+		// Handling incoming messages to be dispatched to different channels
+		// TODO Make STREAMS send data to specific channels
+		// instead of basing the message delivery on the channels
+		// connected route, each channel is bound to a specific stream,
+		// the stream will contain the message the is demultiplexed by the mudem
+		// and push it to the specified channel based on the streams, streamID
+
+		// - Message received
+		// - Message parsed
+		// - Mudem reads message
+		// - Mudem Looks at message's streamID
+		// - Mudem looks up the stream pool
+		// - The stream pool contains channels using the stream
+		// - Each Stream contains a pointer to a Channel
+
+		for _, channel := range route.channels {
+			channel.chanBuff <- m
+		}
+	case msgType.ErrorMessage:
+		log.Println(m.MessageType)
+	case msgType.Queue:
+		log.Println(m.MessageType)
+	default:
+		log.Println("ERROR: Unidentified type")
 	}
 }

@@ -11,6 +11,13 @@ import (
 	"net"
 )
 
+type Route struct {
+	Name     string
+	channels []*Channel
+}
+
+var RouteTable = map[string]Route{}
+
 type Channel struct {
 	StreamID string
 	BoundTo  string
@@ -26,6 +33,8 @@ type ChannelHandler interface {
 }
 
 /*
+Channel asserts that a message queue exists on the server, which then connects to that
+specified message queue based on the route that the queue is bound to
   - Name is used to route endpoint messages to the specified queue,
     which then pushes messages to consumers that are subscribe to it,
   - Type could be 'P2P' (point to point) or 'PUBSUB' (pub-sub) model,

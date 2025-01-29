@@ -7,12 +7,18 @@ import (
 	protocol "message-broker-endpoint-api/internal/types"
 )
 
-// Takes in the incoming message from the message broker server
+/*
+Takes in the incoming message from the message broker server and returns
+the unmarshalled messages as an interface{} so that we can perform
+a message dispatch or pattern matching based on the message's type
+*/
 func MessageParser(message []byte) (interface{}, error) {
-	// Given an empty interface where it can store any value and be represented as any type,
-	// we need to assert that its of some known type by matching the "MessageType" of the incoming message,
-	// once the "MessageType" of the message is known, we can then Unmarashal the message into the specified
-	// known type that matched the "MessageType"
+	/*
+	 Given an empty interface where it can store any value and be represented as any type,
+	 we need to assert that its of some known type by matching the "MessageType" of the incoming message,
+	 once the "MessageType" of the message is known, we can then Unmarashal the message into the specified
+	 known type that matched the "MessageType"
+	*/
 	var tmp map[string]interface{}
 	err := json.Unmarshal(message, &tmp)
 	if err != nil {
