@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	msgType "message-broker-endpoint-api/internal/types"
 	"message-broker-endpoint-api/internal/utils"
 )
@@ -16,8 +16,8 @@ func Mudem(incomingMessage []byte) {
 
 	msg, err := utils.MessageParser(incomingMessage)
 	if err != nil {
-		log.Printf("ERROR: Unable to parse message")
-		log.Println(err.Error())
+		fmt.Printf("ERROR: Unable to parse message")
+		fmt.Println(err.Error())
 		return
 	}
 
@@ -25,12 +25,12 @@ func Mudem(incomingMessage []byte) {
 
 	switch m := msg.(type) {
 	case msgType.EPMessage:
-		log.Println(m.MessageType)
+		fmt.Println(m.MessageType)
 
 		chann, exists := STREAM_POOL[m.StreamID]
 		if !exists {
-			log.Println("NOTIF: Route does not exist")
-			log.Println("NOTIF: Do nothing")
+			fmt.Println("NOTIF: Route does not exist")
+			fmt.Println("NOTIF: Do nothing")
 			return
 		}
 		// Handling incoming messages to be dispatched to different channels
@@ -49,10 +49,10 @@ func Mudem(incomingMessage []byte) {
 		// - Each Stream contains a pointer to a Channel
 		chann.chanBuff <- m
 	case msgType.ErrorMessage:
-		log.Println(m.MessageType)
+		fmt.Println(m.MessageType)
 	case msgType.Queue:
-		log.Println(m.MessageType)
+		fmt.Println(m.MessageType)
 	default:
-		log.Println("ERROR: Unidentified type")
+		fmt.Println("ERROR: Unidentified type")
 	}
 }

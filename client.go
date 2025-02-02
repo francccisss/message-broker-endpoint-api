@@ -3,10 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/google/uuid"
-	"log"
+	"fmt"
 	"math"
 	"net"
+
+	"github.com/google/uuid"
 )
 
 // This is a wrapper, don't expose this tcp connection
@@ -23,11 +24,11 @@ type connection struct {
 func Connect(address string) (connection, error) {
 	conn, err := net.Dial("tcp", address) // need to change this
 	if err != nil {
-		log.Println(err.Error())
+		fmt.Println(err.Error())
 		return connection{}, err
 	}
 	go HandleIncomingMessages(conn)
-	log.Printf("NOTIF: Successfully Connected to message broker on %s", address)
+	fmt.Printf("NOTIF: Successfully Connected to message broker on %s\n", address)
 	return connection{conn}, nil
 }
 
@@ -63,6 +64,8 @@ func (c connection) CreateChannel() (Channel, error) {
 	return ch, nil
 }
 
+// TODO Update this using using the server's implementation of handling
+// of incoming requests
 func HandleIncomingMessages(c net.Conn) {
 	bodyBuf := make([]byte, READ_SIZE)
 	headerBuf := make([]byte, HEADER_SIZE)
@@ -70,16 +73,16 @@ func HandleIncomingMessages(c net.Conn) {
 		var msgBuf bytes.Buffer
 		_, err := c.Read(headerBuf)
 		if err != nil {
-			log.Println("ERROR: Unable to decode header prefix length")
+			fmt.Println("ERROR: Unable to decode header prefix length")
 			return
 		}
 		expectedMsgLength := int(binary.LittleEndian.Uint32(headerBuf[:HEADER_SIZE]))
-		log.Printf("Prefix Length Receieved: %d\n", expectedMsgLength)
+		fmt.Printf("Prefix Length Receieved: %d\n", expectedMsgLength)
 
 		for {
 			_, err := c.Read(bodyBuf)
 			if err != nil {
-				log.Printf("ERROR: Unable to read the incoming message body ")
+				fmt.Println("ERROR: Unable to read the incoming message body ")
 				break
 			}
 			remainingBytes := int(math.Min(float64(expectedMsgLength-msgBuf.Len()), float64(READ_SIZE)))
@@ -87,15 +90,15 @@ func HandleIncomingMessages(c net.Conn) {
 			// 1024 that is to be read into the bodyBuf
 			_, err = msgBuf.Write(bodyBuf[:remainingBytes])
 			if err != nil {
-				log.Printf("ERROR: Unable to append bytes to the message buffer ")
+				fmt.Println("ERROR: Unable to append bytes to the message buffer ")
 				break
 			}
 
-			log.Printf("Current Total in msgBuf: %+v\n", msgBuf.Len())
+			fmt.Printf("Current Total in msgBuf: %+v\n", msgBuf.Len())
 			if msgBuf.Len() == expectedMsgLength {
-				log.Printf("NOTIF: Receieved all values: %d\n", msgBuf.Bytes())
+				fmt.Printf("NOTIF: Receieved all values: %d\n", msgBuf.Bytes())
 
-				log.Printf("BODYBUF BEFORE:\n %+v\n", bodyBuf)
+				fmt.Printf("BODYBUF BEFORE:\n %+v\n", bodyBuf)
 
 				// Currently head buff is occupied
 				// so replace it with approrriate size with the excess from bodyBuf
@@ -108,7 +111,7 @@ func HandleIncomingMessages(c net.Conn) {
 					copy(headerBuf, bodyBuf)
 					bodyBuf = bodyBuf[:0]
 				} else {
-					log.Printf("EXTRACTED HEADER LENGTH :%d\n", len(bodyBuf[remainingBytes:remainingBytes+HEADER_SIZE]))
+					fmt.Printf("EXTRACTED HEADER LENGTH :%d\n", len(bodyBuf[remainingBytes:remainingBytes+HEADER_SIZE]))
 
 					copy(headerBuf, bodyBuf[remainingBytes:remainingBytes+HEADER_SIZE])
 					copy(bodyBuf, bodyBuf[remainingBytes+HEADER_SIZE:])

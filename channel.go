@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	msgType "message-broker-endpoint-api/internal/types"
 	"message-broker-endpoint-api/internal/utils"
 	"net"
@@ -34,7 +33,7 @@ specified message queue based on the route that the queue is bound to
   - Durable persists data in the queue
 */
 func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, error) {
-	log.Println("Asserting a Queue")
+	fmt.Println("NOTIF: Asserting a Queue")
 
 	// TODO Something wrong with this, server is not able to parse
 	// message from queue assertion for some reason
@@ -73,7 +72,7 @@ func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, e
 Do i need QueueType??
 */
 func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string) error {
-	log.Println("Delivering Message")
+	fmt.Println("NOTIF: Delivering Message")
 	emsg := msgType.EPMessage{
 		MessageType: "EPMessage",
 		Route:       Route,
@@ -84,7 +83,7 @@ func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string)
 
 	body, err := json.Marshal(emsg)
 	if err != nil {
-		log.Println("ERROR: Unable to Marshal EPMessage")
+		fmt.Println("ERROR: Unable to Marshal EPMessage")
 		return err
 	}
 
@@ -117,14 +116,14 @@ type Consumer struct {
 // push the incoming messages into the stream which then pushes the message into the
 // the channel's channel buffer
 func (ch Channel) Consume(route string) <-chan msgType.EPMessage {
-	log.Printf("Consuming from %s\n", route)
+	fmt.Printf("NOTIF: Consuming from %s\n", route)
 
 	b, err := json.Marshal(Consumer{
 		MessageType: "Consumer",
 		Route:       route,
 	})
 	if err != nil {
-		log.Println("ERROR: Unable Marshal Consume Message")
+		fmt.Println("ERROR: Unable Marshal Consume Message")
 	}
 	appConsBuff, err := utils.AppendPrefixLength(b)
 	if err != nil {
@@ -132,7 +131,7 @@ func (ch Channel) Consume(route string) <-chan msgType.EPMessage {
 	}
 	_, err = ch.conn.Write(appConsBuff)
 	if err != nil {
-		log.Println("ERROR: Unable to create a consumer")
+		fmt.Println("ERROR: Unable to create a consumer")
 	}
 
 	return ch.chanBuff

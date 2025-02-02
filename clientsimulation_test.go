@@ -27,7 +27,7 @@ func TestClientSimulation(t *testing.T) {
 	}
 	loop := make(chan struct{})
 	<-loop
-	fmt.Println("Simulation Ended")
+	fmt.Println("TEST_NOTIF: Simulation Ended")
 }
 
 func providers(wg *sync.WaitGroup, tag int, route string) {
@@ -43,7 +43,7 @@ func providers(wg *sync.WaitGroup, tag int, route string) {
 		log.Println(err.Error())
 		return
 	}
-	log.Println("NOTIF: Successfully created a new Channel")
+	fmt.Println("NOTIF: Successfully created a new Channel")
 	_, err = ch.AssertQueue(route, "P2P", false)
 	if err != nil {
 		log.Println(err.Error())
@@ -66,7 +66,7 @@ func consumers(tag int) {
 	if err != nil {
 		log.Panic(err.Error())
 	}
-	log.Println("NOTIF: Successfully created a new Channel")
+	fmt.Println("NOTIF: Successfully created a new Channel")
 	_, err = ch.AssertQueue("route", "P2P", false)
 	if err != nil {
 		log.Panic(err.Error())
@@ -74,8 +74,8 @@ func consumers(tag int) {
 
 	msg := ch.Consume("route")
 
-	log.Println("Waiting for message to consume")
+	fmt.Println("Waiting for message to consume")
 	m := <-msg
-	log.Printf("NOTIF: Received Message from route: %s\n", string(m.Body))
+	fmt.Printf("NOTIF: Received Message from route: %s\n", string(m.Body))
 
 }
