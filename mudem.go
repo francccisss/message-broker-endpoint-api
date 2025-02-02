@@ -27,7 +27,7 @@ func Mudem(incomingMessage []byte) {
 	case msgType.EPMessage:
 		log.Println(m.MessageType)
 
-		route, exists := RouteTable[m.Route]
+		chann, exists := STREAM_POOL[m.StreamID]
 		if !exists {
 			log.Println("NOTIF: Route does not exist")
 			log.Println("NOTIF: Do nothing")
@@ -47,10 +47,7 @@ func Mudem(incomingMessage []byte) {
 		// - Mudem looks up the stream pool
 		// - The stream pool contains channels using the stream
 		// - Each Stream contains a pointer to a Channel
-
-		for _, channel := range route.channels {
-			channel.chanBuff <- m
-		}
+		chann.chanBuff <- m
 	case msgType.ErrorMessage:
 		log.Println(m.MessageType)
 	case msgType.Queue:

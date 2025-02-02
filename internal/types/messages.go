@@ -1,7 +1,6 @@
 package types
 
 type Queue struct {
-	MessageSize uint32
 	MessageType string
 	Name        string
 	Type        string
@@ -10,7 +9,6 @@ type Queue struct {
 }
 
 type EPMessage struct {
-	MessageSize uint32
 	MessageType string
 	Route       string
 	Type        string
@@ -20,7 +18,6 @@ type EPMessage struct {
 
 // TODO Figure out how to handle errors from different requests
 type ErrorMessage struct {
-	MessageSize uint32
 	MessageType string
 	Body        []byte
 	StreamID    string

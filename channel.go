@@ -11,13 +11,6 @@ import (
 	"net"
 )
 
-type Route struct {
-	Name     string
-	channels []*Channel
-}
-
-var RouteTable = map[string]Route{}
-
 type Channel struct {
 	StreamID string
 	BoundTo  string
@@ -86,6 +79,7 @@ func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string)
 		Route:       Route,
 		Type:        QueueType,
 		Body:        Message,
+		StreamID:    ch.StreamID,
 	}
 
 	body, err := json.Marshal(emsg)
@@ -114,24 +108,16 @@ func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string)
 type Consumer struct {
 	MessageType string
 	Route       string
+	StreamID    string
 }
 
-// - Route to consume messages from
-// creating a route table for streams where if a message of route x is received by the mudem,
-// it will try to pattern match the message's data type, parse it and read the route name in
-// the message's header, if it exists in the table, the channels/streams connected on that route,
-// will receive a message through their chanBuff channel buffer
+// Calling consume returns a read-only channel buffer, this channel's channel buffer
+// is used by the Mudem to push messages into it by doing a STREAM_POOL look up, since
+// each stream in the table is a pointer to a specific channel, the channel will then
+// push the incoming messages into the stream which then pushes the message into the
+// the channel's channel buffer
 func (ch Channel) Consume(route string) <-chan msgType.EPMessage {
 	log.Printf("Consuming from %s\n", route)
-	r, exists := RouteTable[route]
-	if !exists {
-		// This channel will consume any message on specified route
-		RouteTable[route] = Route{
-			Name:     route,
-			channels: []*Channel{&ch},
-		}
-	}
-	r.channels = append(r.channels, &ch)
 
 	b, err := json.Marshal(Consumer{
 		MessageType: "Consumer",

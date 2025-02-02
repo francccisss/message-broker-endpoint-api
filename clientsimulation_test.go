@@ -8,17 +8,17 @@ import (
 )
 
 const (
+	CONS_COUNT = 0
 	PRV_COUNT  = 3
-	CONS_COUNT = 1
 )
 
 func TestClientSimulation(t *testing.T) {
 
 	var wg sync.WaitGroup
 
-	for provTag := range PRV_COUNT {
+	for tag := range PRV_COUNT {
 		wg.Add(1)
-		go providers(&wg, provTag)
+		go providers(&wg, tag, "route")
 	}
 
 	wg.Wait()
@@ -30,26 +30,30 @@ func TestClientSimulation(t *testing.T) {
 	fmt.Println("Simulation Ended")
 }
 
-func providers(wg *sync.WaitGroup, tag int) {
+func providers(wg *sync.WaitGroup, tag int, route string) {
 	defer fmt.Printf("Provider #%d exited\n", tag)
+	defer wg.Done()
 	conn, err := Connect("localhost:5671")
 	if err != nil {
-		log.Panic(err.Error())
+		log.Println(err.Error())
+		return
 	}
 	ch, err := conn.CreateChannel()
 	if err != nil {
-		log.Panic(err.Error())
+		log.Println(err.Error())
+		return
 	}
 	log.Println("NOTIF: Successfully created a new Channel")
-	_, err = ch.AssertQueue("route", "P3P", false)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-	err = ch.DeliverMessage("route", []byte("Hello"), "P2P")
+	_, err = ch.AssertQueue(route, "P2P", false)
 	if err != nil {
 		log.Println(err.Error())
+		return
 	}
-	wg.Done()
+	err = ch.DeliverMessage(route, []byte(route), "P2P")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
 }
 
 func consumers(tag int) {
