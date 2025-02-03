@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/binary"
 	"fmt"
@@ -13,7 +14,10 @@ import (
 // This is a wrapper, don't expose this tcp connection
 // Returns the current connection with the message broker on the specified port
 
-const MAX_STREAMS = 3
+const (
+	MAX_STREAMS       = 3
+	DEFAULT_READ_SIZE = 50
+)
 
 var STREAM_POOL = make(map[string]*Channel)
 
@@ -27,7 +31,7 @@ func Connect(address string) (connection, error) {
 		fmt.Println(err.Error())
 		return connection{}, err
 	}
-	go HandleIncomingMessages(conn)
+	go HandleIncomingRequests(conn)
 	fmt.Printf("NOTIF: Successfully Connected to message broker on %s\n", address)
 	return connection{conn}, nil
 }
@@ -66,9 +70,14 @@ func (c connection) CreateChannel() (Channel, error) {
 
 // TODO Update this using using the server's implementation of handling
 // of incoming requests
-func HandleIncomingMessages(c net.Conn) {
-	bodyBuf := make([]byte, READ_SIZE)
+func HandleIncomingRequests(c net.Conn) {
+	connBufReader := bufio.NewReader(c)
+	defer c.Close()
+
+	// fixed sized header length to extract from message stream
+	// Outer loop will always take 4 iterations
 	headerBuf := make([]byte, HEADER_SIZE)
+	readSize := DEFAULT_READ_SIZE
 	for {
 		var msgBuf bytes.Buffer
 		_, err := c.Read(headerBuf)
@@ -76,46 +85,38 @@ func HandleIncomingMessages(c net.Conn) {
 			fmt.Println("ERROR: Unable to decode header prefix length")
 			return
 		}
+
 		expectedMsgLength := int(binary.LittleEndian.Uint32(headerBuf[:HEADER_SIZE]))
 		fmt.Printf("Prefix Length Receieved: %d\n", expectedMsgLength)
-
 		for {
-			_, err := c.Read(bodyBuf)
+			bodyBuf := make([]byte, readSize)
+			_, err := connBufReader.Read(bodyBuf)
 			if err != nil {
-				fmt.Println("ERROR: Unable to read the incoming message body ")
-				break
-			}
-			remainingBytes := int(math.Min(float64(expectedMsgLength-msgBuf.Len()), float64(READ_SIZE)))
-			// Writes the from the minimum value of remainingBytes into the buffer up to
-			// 1024 that is to be read into the bodyBuf
-			_, err = msgBuf.Write(bodyBuf[:remainingBytes])
-			if err != nil {
-				fmt.Println("ERROR: Unable to append bytes to the message buffer ")
+				fmt.Printf("ERROR: Unable to read the incoming message body ")
 				break
 			}
 
-			fmt.Printf("Current Total in msgBuf: %+v\n", msgBuf.Len())
+			// store bytes from stream up to the current readsize length into the
+			// msgBuf (msgBuf is the current accumulated requested stream from client)
+			_, err = msgBuf.Write(bodyBuf[:])
+			if err != nil {
+				fmt.Printf("ERROR: Unable to write incoming bytes to the message buffer ")
+				break
+			}
+
+			// Updates the readsize for the next stream of bytes to be captured in bulk
+			// This formula returns the minimum int between the two, if there is space
+			// to fit the stream of bytes in the bodyBuf then return current readSize which is the DEFAULT_READ_SIZE
+			// else if current readSize is greater than the remaining bytes left from the expected message
+			// return n bytes up to the length of the remaining bytes of the current message.
+			readSize = int(math.Min(float64(expectedMsgLength-msgBuf.Len()), float64(readSize)))
+
+			// finishes the current stream request
 			if msgBuf.Len() == expectedMsgLength {
-				fmt.Printf("NOTIF: Receieved all values: %d\n", msgBuf.Bytes())
-
-				fmt.Printf("BODYBUF BEFORE:\n %+v\n", bodyBuf)
-
-				// Currently head buff is occupied
-				// so replace it with approrriate size with the excess from bodyBuf
-				// to the headerBuff and leave the rest within the bodyBuf
-
-				// Since TCP is a stream oriented protocol, each new requeust travels in a single
-				// connection so to handle excess bytes within the stream, we need to extract
-				// and place these excess bytes in to the header and the body buffers
-				if len(bodyBuf[remainingBytes:]) < HEADER_SIZE {
-					copy(headerBuf, bodyBuf)
-					bodyBuf = bodyBuf[:0]
-				} else {
-					fmt.Printf("EXTRACTED HEADER LENGTH :%d\n", len(bodyBuf[remainingBytes:remainingBytes+HEADER_SIZE]))
-
-					copy(headerBuf, bodyBuf[remainingBytes:remainingBytes+HEADER_SIZE])
-					copy(bodyBuf, bodyBuf[remainingBytes+HEADER_SIZE:])
-				}
+				readSize = DEFAULT_READ_SIZE
+				fmt.Println("NOTIF: Message sequence complete.")
+				fmt.Println("NOTIF: Do something with the new request.")
+				break
 			}
 		}
 	}

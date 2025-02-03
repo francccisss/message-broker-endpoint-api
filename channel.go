@@ -72,7 +72,8 @@ func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, e
 Do i need QueueType??
 */
 func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string) error {
-	fmt.Println("NOTIF: Delivering Message")
+	fmt.Println("NOTIF: Delivering Message...")
+	defer fmt.Println("NOTIF: Message delivered!")
 	emsg := msgType.EPMessage{
 		MessageType: "EPMessage",
 		Route:       Route,
