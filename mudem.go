@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math"
@@ -29,6 +30,12 @@ func Mudem(c net.Conn) {
 	}
 }
 
+/*
+Handling incoming messages to be dispatched to different channels,
+each channel is bound to a specific stream, the stream will contain
+the a pointer to the channel, messages will be pushed into the channel's
+channel buffer
+*/
 func DispatchMessage(incomingMessage []byte) {
 
 	msg, err := utils.MessageParser(incomingMessage)
@@ -38,8 +45,8 @@ func DispatchMessage(incomingMessage []byte) {
 		return
 	}
 
-	// type assertion switch statement for different processing
-
+	// Type assertion to marashal incoming json stream as
+	// concrete type defined in the package's message types
 	switch m := msg.(type) {
 	case msgType.EPMessage:
 		fmt.Println(m.MessageType)
@@ -50,29 +57,22 @@ func DispatchMessage(incomingMessage []byte) {
 			fmt.Println("NOTIF: Do nothing")
 			return
 		}
-		// Handling incoming messages to be dispatched to different channels
-		// instead of basing the message delivery on the channels
-		// connected route, each channel is bound to a specific stream,
-		// the stream will contain the message the is demultiplexed by the mudem
-		// and push it to the specified channel based on the streams, streamID
+		var epMsg msgType.EPMessage
+		err := json.Unmarshal(incomingMessage, &epMsg)
+		if err != nil {
+			fmt.Println(err.Error())
+			break
+		}
+		chann.chanBuff <- epMsg
 
-		// - Message received
-		// - Message parsed
-		// - Mudem reads message
-		// - Mudem Looks at message's streamID
-		// - Mudem looks up the stream pool
-		// - The stream pool contains channels using the stream
-		// - Each Stream contains a pointer to a Channel channel buffer
-		chann.chanBuff <- m
 	case msgType.ErrorMessage:
-		fmt.Println(m.MessageType)
-	case msgType.Queue:
 		fmt.Println(m.MessageType)
 	default:
 		fmt.Println("ERROR: Unidentified type")
 	}
 }
 
+// Using prefix length for handling tcp data stream
 func HandleIncomingMessage(c net.Conn, msgChan chan []byte) {
 	defer fmt.Println("NOTIF: Exiting request listener")
 

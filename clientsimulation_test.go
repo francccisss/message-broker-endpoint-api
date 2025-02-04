@@ -8,30 +8,34 @@ import (
 )
 
 const (
-	CONS_COUNT = 0
-	PRV_COUNT  = 1
+	CONS_COUNT = 4
+	PRV_COUNT  = 4
 )
 
-func TestClientSimulation(t *testing.T) {
+func TestSpawnProviders(t *testing.T) {
 
 	var wg sync.WaitGroup
-
 	for tag := range PRV_COUNT {
 		wg.Add(1)
-		providers(&wg, tag, "route")
+		go providers(&wg, tag, "route")
 	}
-
 	wg.Wait()
-	for consTag := range CONS_COUNT {
-		go consumers(consTag)
+	fmt.Printf("TEST_NOTIF: Spawned %d Providers\n", PRV_COUNT)
+}
+
+func TestSpawnConsumers(t *testing.T) {
+	CONS_COUNT := 4
+	var wg sync.WaitGroup
+	for tag := range CONS_COUNT {
+		wg.Add(1)
+		go consumers(tag)
 	}
-	loop := make(chan struct{})
-	<-loop
-	fmt.Println("Simulation Ended")
+	wg.Wait()
+	fmt.Printf("TEST_NOTIF: Spawned %d Providers\n", CONS_COUNT)
 }
 
 func providers(wg *sync.WaitGroup, tag int, route string) {
-	defer fmt.Printf("NOTIF: Provider #%d exited\n", tag)
+	defer fmt.Printf("TEST_NOTIF: Provider #%d exited\n", tag)
 	defer wg.Done()
 	conn, err := Connect("localhost:5671")
 	if err != nil {
@@ -43,7 +47,7 @@ func providers(wg *sync.WaitGroup, tag int, route string) {
 		fmt.Println(err.Error())
 		return
 	}
-	fmt.Println("NOTIF: Successfully created a new Channel")
+	fmt.Println("TEST_NOTIF: Successfully created a new Channel")
 	_, err = ch.AssertQueue(route, "P2P", false)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -57,7 +61,7 @@ func providers(wg *sync.WaitGroup, tag int, route string) {
 }
 
 func consumers(tag int) {
-	defer fmt.Printf("NOTIF: Consumer #%d exited\n", tag)
+	defer fmt.Printf("TEST_NOTIF: Consumer #%d exited\n", tag)
 	conn, err := Connect("localhost:5671")
 	if err != nil {
 		log.Panic(err.Error())
@@ -66,7 +70,7 @@ func consumers(tag int) {
 	if err != nil {
 		log.Panic(err.Error())
 	}
-	fmt.Println("NOTIF: Successfully created a new Channel")
+	fmt.Println("TEST_NOTIF: Successfully created a new Channel")
 	_, err = ch.AssertQueue("route", "P2P", false)
 	if err != nil {
 		log.Panic(err.Error())
@@ -74,8 +78,8 @@ func consumers(tag int) {
 
 	msg := ch.Consume("route")
 
-	fmt.Printf("NOTIF: Consumer #%d Waiting for message to consume\n", tag)
+	fmt.Printf("TEST_NOTIF: Consumer #%d Waiting for message to consume\n", tag)
 	m := <-msg
-	fmt.Printf("NOTIF: Received Message from route: %s\n", string(m.Body))
+	fmt.Printf("TEST_NOTIF: Received Message from route: %s\n", string(m.Body))
 
 }
