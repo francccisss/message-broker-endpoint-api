@@ -47,6 +47,7 @@ func providers(wg *sync.WaitGroup, tag int, route string) {
 		fmt.Println(err.Error())
 		return
 	}
+
 	fmt.Println("TEST_NOTIF: Successfully created a new Channel")
 	_, err = ch.AssertQueue(route, "P2P", false)
 	if err != nil {

@@ -10,17 +10,17 @@ import (
 	"net"
 )
 
-type Channel struct {
+type ClientChannel struct {
 	StreamID string
 	BoundTo  string
 	conn     net.Conn
 	chanBuff chan msgType.EPMessage
 }
 
-type ChannelHandler interface {
-	AssertQueue(MessageType string, Name string, Type string, Durable bool) (string, error)
-	DeliverMessage(message string)
-	Consume(route string, model string, durable bool)
+type Channel interface {
+	AssertQueue(Name string, Type string, Durable bool) (string, error)
+	DeliverMessage(Route string, Message []byte, QueueType string) error
+	Consume(route string) <-chan msgType.EPMessage
 	CloseChannel()
 }
 
@@ -32,7 +32,7 @@ specified message queue based on the route that the queue is bound to
   - Type could be 'P2P' (point to point) or 'PUBSUB' (pub-sub) model,
   - Durable persists data in the queue
 */
-func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, error) {
+func (ch ClientChannel) AssertQueue(Name string, Type string, Durable bool) (string, error) {
 	fmt.Println("NOTIF: Asserting a Queue")
 
 	// TODO Something wrong with this, server is not able to parse
@@ -71,7 +71,7 @@ func (ch Channel) AssertQueue(Name string, Type string, Durable bool) (string, e
 /*
 Do i need QueueType??
 */
-func (ch Channel) DeliverMessage(Route string, Message []byte, QueueType string) error {
+func (ch ClientChannel) DeliverMessage(Route string, Message []byte, QueueType string) error {
 	fmt.Println("NOTIF: Delivering Message...")
 	defer fmt.Println("NOTIF: Message delivered!")
 	emsg := msgType.EPMessage{
@@ -116,7 +116,7 @@ type Consumer struct {
 // each stream in the table is a pointer to a specific channel, the channel will then
 // push the incoming messages into the stream which then pushes the message into the
 // the channel's channel buffer
-func (ch Channel) Consume(route string) <-chan msgType.EPMessage {
+func (ch ClientChannel) Consume(route string) <-chan msgType.EPMessage {
 	fmt.Printf("NOTIF: Consuming from %s\n", route)
 
 	b, err := json.Marshal(Consumer{
@@ -138,5 +138,5 @@ func (ch Channel) Consume(route string) <-chan msgType.EPMessage {
 	return ch.chanBuff
 }
 
-func (ch Channel) CloseChannel() {
+func (ch ClientChannel) CloseChannel() {
 }

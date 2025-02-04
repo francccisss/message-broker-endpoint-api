@@ -15,7 +15,7 @@ const (
 	DEFAULT_READ_SIZE = 50
 )
 
-var STREAM_POOL = make(map[string]*Channel)
+var STREAM_POOL = make(map[string]*ClientChannel)
 
 type connection struct {
 	conn net.Conn
@@ -53,7 +53,7 @@ func Connect(address string) (connection, error) {
 // stream that is specified on the StreamID field that is included in every message type
 func (c connection) CreateChannel() (Channel, error) {
 	newStreamID := uuid.NewString()
-	ch := Channel{
+	ch := ClientChannel{
 		StreamID: newStreamID,
 		conn:     c.conn,
 	}
