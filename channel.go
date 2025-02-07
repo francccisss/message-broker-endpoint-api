@@ -42,6 +42,7 @@ func (ch ClientChannel) AssertQueue(Name string, Type string, Durable bool) (str
 		MessageType: "Queue",
 		Type:        Type,
 		Durable:     Durable,
+		StreamID:    ch.StreamID,
 	}
 	b, err := json.Marshal(q)
 	if err != nil {
@@ -72,7 +73,6 @@ func (ch ClientChannel) AssertQueue(Name string, Type string, Durable bool) (str
 Do i need QueueType??
 */
 func (ch ClientChannel) DeliverMessage(Route string, Message []byte, QueueType string) error {
-	fmt.Println("NOTIF: Delivering Message...")
 	defer fmt.Println("NOTIF: Message delivered!")
 	emsg := msgType.EPMessage{
 		MessageType: "EPMessage",
@@ -108,7 +108,6 @@ func (ch ClientChannel) DeliverMessage(Route string, Message []byte, QueueType s
 type Consumer struct {
 	MessageType string
 	Route       string
-	StreamID    string
 }
 
 // Calling consume returns a read-only channel buffer, this channel's channel buffer
@@ -118,23 +117,9 @@ type Consumer struct {
 // the channel's channel buffer
 func (ch ClientChannel) Consume(route string) <-chan msgType.EPMessage {
 	fmt.Printf("NOTIF: Consuming from %s\n", route)
-
-	b, err := json.Marshal(Consumer{
-		MessageType: "Consumer",
-		Route:       route,
-	})
-	if err != nil {
-		fmt.Println("ERROR: Unable Marshal Consume Message")
-	}
-	appConsBuff, err := utils.AppendPrefixLength(b)
-	if err != nil {
-		fmt.Printf("ERROR: Unable to append consumer message prefix length")
-	}
-	_, err = ch.conn.Write(appConsBuff)
-	if err != nil {
-		fmt.Println("ERROR: Unable to create a consumer")
-	}
-
+	// implement some functionality to listen to a specific route
+	// a channel can have multiple consumers, which can listen to different routes
+	// register the channel to listen for specific routes
 	return ch.chanBuff
 }
 

@@ -7,29 +7,40 @@ import (
 	"github.com/google/uuid"
 )
 
-// This is a wrapper, don't expose this tcp connection
-// Returns the current connection with the message broker on the specified port
-
 const (
 	MAX_STREAMS       = 3
 	DEFAULT_READ_SIZE = 50
 )
 
-var STREAM_POOL = make(map[string]*ClientChannel)
-
-type connection struct {
+type clientConnection struct {
 	conn net.Conn
+	// StreamPool contains an array of channels
+	// wher each channel corresponds to specific routes
+	// that they listen to, the "stream" takes in
+	// data from server maps the route that corresponds to
+	// a channel
+
+	streamPool map[string]*ClientChannel
+}
+type Connection interface {
+	CreateChannel() (Channel, error)
+	Close()
 }
 
-func Connect(address string) (connection, error) {
+func Connect(address string) (Connection, error) {
 	conn, err := net.Dial("tcp", address) // need to change this
 	if err != nil {
 		fmt.Println(err.Error())
-		return connection{}, err
+		return nil, err
 	}
-	go Mudem(conn)
+	newConnection := &clientConnection{
+		conn:       conn,
+		streamPool: map[string]*ClientChannel{},
+	}
+
+	go Mudem(newConnection)
 	fmt.Printf("NOTIF: Successfully Connected to message broker on %s\n", address)
-	return connection{conn}, nil
+	return newConnection, nil
 }
 
 // # Creates a stream and channel
@@ -51,15 +62,19 @@ func Connect(address string) (connection, error) {
 // The Mudem() is responsible for handling different messages coming from the message broker
 // and parses and then uses the STREAM_POOL look up table to push new messages into the specific
 // stream that is specified on the StreamID field that is included in every message type
-func (c connection) CreateChannel() (Channel, error) {
+func (c *clientConnection) CreateChannel() (Channel, error) {
 	newStreamID := uuid.NewString()
-	ch := ClientChannel{
-		StreamID: newStreamID,
-		conn:     c.conn,
-	}
-	_, exists := STREAM_POOL[newStreamID]
+	ch, exists := c.streamPool[newStreamID]
 	if !exists {
-		STREAM_POOL[newStreamID] = &ch
+		ch = &ClientChannel{
+			StreamID: newStreamID,
+			conn:     c.conn,
+		}
+		c.streamPool[newStreamID] = ch
 	}
+	fmt.Printf("NOTIF: New Channel created bound to stream %s\n", newStreamID)
+	fmt.Printf("NOTIF: ^^ %+v\n", ch)
+	fmt.Printf("NOTIF: Stream Pool Length %d\n", len(c.streamPool))
 	return ch, nil
 }
+func (c clientConnection) Close() {}
