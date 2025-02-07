@@ -8,7 +8,7 @@ import (
 
 const (
 	CONS_COUNT = 1
-	PRV_COUNT  = 1
+	PRV_COUNT  = 5
 )
 
 func TestSpawnProviders(t *testing.T) {
@@ -26,7 +26,7 @@ func TestSpawnConsumers(t *testing.T) {
 	for tag := range CONS_COUNT {
 		go consumers(tag)
 	}
-	fmt.Printf("TEST_NOTIF: Spawned %d Providers\n", CONS_COUNT)
+	fmt.Printf("TEST_NOTIF: Spawned %d Consumers\n", CONS_COUNT)
 	<-l
 }
 

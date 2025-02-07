@@ -42,7 +42,6 @@ its own channel not the channel that was about to receive it
 func DispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChannel) {
 	fmt.Println("NOTIF: Dispatching message...")
 	fmt.Printf("TEST_NOTIF: Stream Pool Length %d\n", len(*streamPool))
-	fmt.Printf("TEST_NOTIF: Stream Pool %+v\n", *streamPool)
 
 	msg, err := utils.MessageParser(incomingMessage)
 	if err != nil {
@@ -55,7 +54,6 @@ func DispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChann
 	switch m := msg.(type) {
 	case msgType.EPMessage:
 		fmt.Printf("TEST_NOTIF: Message of type \"%s\" received\n", m.MessageType)
-		fmt.Printf("TEST_NOTIF: Parsed message: %+v\n", msg)
 		chann, exists := (*streamPool)[m.StreamID]
 		if !exists {
 			fmt.Println("NOTIF: Stream does not exist")
@@ -68,8 +66,8 @@ func DispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChann
 			fmt.Println(err.Error())
 			break
 		}
+		fmt.Println("TEST_NOTIF: Passing data to channel buffer")
 		chann.chanBuff <- epMsg
-
 	case msgType.ErrorMessage:
 		fmt.Println(m.MessageType)
 	default:

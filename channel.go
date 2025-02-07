@@ -115,8 +115,8 @@ type Consumer struct {
 // each stream in the table is a pointer to a specific channel, the channel will then
 // push the incoming messages into the stream which then pushes the message into the
 // the channel's channel buffer
-func (ch ClientChannel) Consume(route string) <-chan msgType.EPMessage {
-	fmt.Printf("NOTIF: Consuming from %s\n", route)
+func (ch *ClientChannel) Consume(route string) <-chan msgType.EPMessage {
+	fmt.Printf("NOTIF: Consuming from \"%s\" \n", route)
 	// implement some functionality to listen to a specific route
 	// a channel can have multiple consumers, which can listen to different routes
 	// register the channel to listen for specific routes

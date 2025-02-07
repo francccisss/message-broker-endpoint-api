@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"message-broker-endpoint-api/internal/types"
 	"net"
 
 	"github.com/google/uuid"
@@ -69,6 +70,7 @@ func (c *clientConnection) CreateChannel() (Channel, error) {
 		ch = &ClientChannel{
 			StreamID: newStreamID,
 			conn:     c.conn,
+			chanBuff: make(chan types.EPMessage),
 		}
 		c.streamPool[newStreamID] = ch
 	}
