@@ -1,6 +1,6 @@
-# msbq-api
+# msbq-client-api
 
-The client side go package used with [Message Broker](https://github.com/francccisss/message-broker) for enabling application endpoints to communication through a message broker middleware.
+The client side go package used with [Message Broker](https://github.com/francccisss/msbq-server) for enabling application endpoints to communication through a message broker middleware.
 
 Mind you this is just a small package, in a small project used for learning, it is not meant to be a fully fledged rabbitmq clone but just implementation of basic functionality.
 
