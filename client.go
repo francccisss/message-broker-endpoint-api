@@ -2,7 +2,6 @@ package msbqclient
 
 import (
 	"fmt"
-	"github.com/francccisss/msbq-client-api/internal/types"
 	"github.com/google/uuid"
 	"net"
 )
@@ -38,7 +37,7 @@ func Connect(address string) (Connection, error) {
 		streamPool: map[string]*ClientChannel{},
 	}
 
-	go Mudem(newConnection)
+	go mudem(newConnection)
 	fmt.Printf("NOTIF: Successfully Connected to message broker on %s\n", address)
 	return newConnection, nil
 }
@@ -69,7 +68,7 @@ func (c *clientConnection) CreateChannel() (Channel, error) {
 		ch = &ClientChannel{
 			StreamID: newStreamID,
 			conn:     c.conn,
-			chanBuff: make(chan types.EPMessage),
+			chanBuff: make(chan EPMessage),
 		}
 		c.streamPool[newStreamID] = ch
 	}

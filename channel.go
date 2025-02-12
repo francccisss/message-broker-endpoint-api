@@ -7,7 +7,6 @@ import (
 	"io"
 	"net"
 
-	"github.com/francccisss/msbq-client-api/internal/types"
 	"github.com/francccisss/msbq-client-api/internal/utils"
 )
 
@@ -15,13 +14,13 @@ type ClientChannel struct {
 	StreamID string
 	BoundTo  string
 	conn     net.Conn
-	chanBuff chan types.EPMessage
+	chanBuff chan EPMessage
 }
 
 type Channel interface {
 	AssertQueue(Name string, Type string, Durable bool) (string, error)
 	DeliverMessage(Route string, Message []byte, QueueType string) error
-	Consume(route string) <-chan types.EPMessage
+	Consume(route string) <-chan EPMessage
 	CloseChannel()
 }
 
@@ -38,7 +37,7 @@ func (ch ClientChannel) AssertQueue(Name string, Type string, Durable bool) (str
 
 	// TODO Something wrong with this, server is not able to parse
 	// message from queue assertion for some reason
-	q := types.Queue{
+	q := Queue{
 		Name:        Name,
 		MessageType: "Queue",
 		Type:        Type,
@@ -75,7 +74,7 @@ Do i need QueueType??
 */
 func (ch ClientChannel) DeliverMessage(Route string, Message []byte, QueueType string) error {
 	defer fmt.Println("NOTIF: Message delivered!")
-	emsg := types.EPMessage{
+	emsg := EPMessage{
 		MessageType: "EPMessage",
 		Route:       Route,
 		Type:        QueueType,
@@ -116,7 +115,7 @@ type Consumer struct {
 // each stream in the table is a pointer to a specific channel, the channel will then
 // push the incoming messages into the stream which then pushes the message into the
 // the channel's channel buffer
-func (ch *ClientChannel) Consume(route string) <-chan types.EPMessage {
+func (ch *ClientChannel) Consume(route string) <-chan EPMessage {
 	fmt.Printf("NOTIF: Consuming from \"%s\" \n", route)
 	// implement some functionality to listen to a specific route
 	// a channel can have multiple consumers, which can listen to different routes

@@ -9,7 +9,6 @@ import (
 	"math"
 	"net"
 
-	"github.com/francccisss/msbq-client-api/internal/types"
 	"github.com/francccisss/msbq-client-api/internal/utils"
 )
 
@@ -19,7 +18,7 @@ const HEADER_SIZE = 4
 // Multiplexer/Demultiplexer takes in the socket connection
 // Mudem will handle the demultiplexing of messages from incoming tcp connection
 // using message dispatch based on the message's type
-func Mudem(c *clientConnection) {
+func mudem(c *clientConnection) {
 	msgChan := make(chan []byte)
 	go HandleIncomingMessage(c.conn, msgChan)
 
@@ -27,7 +26,7 @@ func Mudem(c *clientConnection) {
 	// from the HandleIncomingMessage()
 	for {
 		msg := <-msgChan
-		go DispatchMessage(msg, &c.streamPool)
+		go dispatchMessage(msg, &c.streamPool)
 	}
 }
 
@@ -37,7 +36,7 @@ each channel is bound to a specific stream, the stream will contain
 the a pointer to the channel, messages will be pushed into the channel's
 channel buffer
 */
-func DispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChannel) {
+func dispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChannel) {
 	fmt.Println("NOTIF: Dispatching message...")
 
 	msg, err := utils.MessageParser(incomingMessage)
@@ -49,21 +48,21 @@ func DispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChann
 	// Type assertion to marashal incoming json stream as
 	// concrete type defined in the package's message types
 	switch m := msg.(type) {
-	case types.EPMessage:
+	case EPMessage:
 		chann, exists := (*streamPool)[m.StreamID]
 		if !exists {
 			fmt.Println("NOTIF: Stream does not exist")
 			fmt.Println("NOTIF: Do nothing")
 			return
 		}
-		var epMsg types.EPMessage
+		var epMsg EPMessage
 		err := json.Unmarshal(incomingMessage, &epMsg)
 		if err != nil {
 			fmt.Println(err.Error())
 			break
 		}
 		chann.chanBuff <- epMsg
-	case types.ErrorMessage:
+	case ErrorMessage:
 		fmt.Println(m.MessageType)
 	default:
 		fmt.Println("ERROR: Unidentified type")
