@@ -1,4 +1,4 @@
-package main
+package msbqclient
 
 import (
 	"fmt"

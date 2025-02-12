@@ -1,4 +1,4 @@
-package main
+package msbqclient
 
 import (
 	"bytes"
@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"io"
 	"math"
-	msgType "message-broker-endpoint-api/internal/types"
-	"message-broker-endpoint-api/internal/utils"
 	"net"
+
+	"github.com/francccisss/msbq-client-api/internal/types"
+	"github.com/francccisss/msbq-client-api/internal/utils"
 )
 
 const READ_SIZE = 1024
@@ -48,21 +49,21 @@ func DispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChann
 	// Type assertion to marashal incoming json stream as
 	// concrete type defined in the package's message types
 	switch m := msg.(type) {
-	case msgType.EPMessage:
+	case types.EPMessage:
 		chann, exists := (*streamPool)[m.StreamID]
 		if !exists {
 			fmt.Println("NOTIF: Stream does not exist")
 			fmt.Println("NOTIF: Do nothing")
 			return
 		}
-		var epMsg msgType.EPMessage
+		var epMsg types.EPMessage
 		err := json.Unmarshal(incomingMessage, &epMsg)
 		if err != nil {
 			fmt.Println(err.Error())
 			break
 		}
 		chann.chanBuff <- epMsg
-	case msgType.ErrorMessage:
+	case types.ErrorMessage:
 		fmt.Println(m.MessageType)
 	default:
 		fmt.Println("ERROR: Unidentified type")
