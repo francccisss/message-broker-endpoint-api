@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"message-broker-endpoint-api/internal/types"
-	"net"
-
+	"github.com/francccisss/msbq-client-api/internal/types"
 	"github.com/google/uuid"
+	"net"
 )
 
 const (

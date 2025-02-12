@@ -3,8 +3,8 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/francccisss/msbq-client-api/internal/types"
 	"log"
-	protocol "message-broker-endpoint-api/internal/types"
 )
 
 /*
@@ -32,23 +32,24 @@ func MessageParser(message []byte) (interface{}, error) {
 	  for us to assert the type of the message returned by the json package, we could
 	  assert and Unmarshal again to some known concrete type.
 	*/
+
 	switch tmp["MessageType"] {
 	case "EPMessage":
-		var epMsg protocol.EPMessage
+		var epMsg types.EPMessage
 		err := json.Unmarshal(message, &epMsg)
 		if err != nil {
 			return nil, err
 		}
 		return epMsg, nil
 	case "Queue":
-		var qMsg protocol.Queue
+		var qMsg types.Queue
 		err := json.Unmarshal(message, &qMsg)
 		if err != nil {
 			return nil, err
 		}
 		return qMsg, nil
 	case "ErrorMessage":
-		var errMsg protocol.ErrorMessage
+		var errMsg types.ErrorMessage
 		err := json.Unmarshal(message, &errMsg)
 		if err != nil {
 			return nil, err
