@@ -1,4 +1,4 @@
-module message-broker-endpoint-api
+module github.com/francccisss/msbq-api
 
 go 1.23.2
 

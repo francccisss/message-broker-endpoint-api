@@ -35,13 +35,9 @@ Handling incoming messages to be dispatched to different channels,
 each channel is bound to a specific stream, the stream will contain
 the a pointer to the channel, messages will be pushed into the channel's
 channel buffer
-
-TODO man why was i checking the streamID? the streamID from incoming message was from
-its own channel not the channel that was about to receive it
 */
 func DispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChannel) {
 	fmt.Println("NOTIF: Dispatching message...")
-	fmt.Printf("TEST_NOTIF: Stream Pool Length %d\n", len(*streamPool))
 
 	msg, err := utils.MessageParser(incomingMessage)
 	if err != nil {
@@ -53,7 +49,6 @@ func DispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChann
 	// concrete type defined in the package's message types
 	switch m := msg.(type) {
 	case msgType.EPMessage:
-		fmt.Printf("TEST_NOTIF: Message of type \"%s\" received\n", m.MessageType)
 		chann, exists := (*streamPool)[m.StreamID]
 		if !exists {
 			fmt.Println("NOTIF: Stream does not exist")
@@ -66,7 +61,6 @@ func DispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChann
 			fmt.Println(err.Error())
 			break
 		}
-		fmt.Println("TEST_NOTIF: Passing data to channel buffer")
 		chann.chanBuff <- epMsg
 	case msgType.ErrorMessage:
 		fmt.Println(m.MessageType)
