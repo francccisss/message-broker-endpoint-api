@@ -1,4 +1,4 @@
-# message-broker-endpoint-api
+# msbq-api
 
 The client side go package used with [Message Broker](https://github.com/francccisss/message-broker) for enabling application endpoints to communication through a message broker middleware.
 
