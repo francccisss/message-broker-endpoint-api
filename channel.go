@@ -75,7 +75,7 @@ Do i need QueueType??
 func (ch ClientChannel) DeliverMessage(Route string, Message []byte, QueueType string) error {
 	defer fmt.Println("NOTIF: Message delivered!")
 	emsg := utils.EPMessage{
-		MessageType: "utils.EPMessage",
+		MessageType: "EPMessage",
 		Route:       Route,
 		Type:        QueueType,
 		Body:        Message,
@@ -84,7 +84,7 @@ func (ch ClientChannel) DeliverMessage(Route string, Message []byte, QueueType s
 
 	body, err := json.Marshal(emsg)
 	if err != nil {
-		fmt.Println("ERROR: Unable to Marshal utils.EPMessage")
+		fmt.Println("ERROR: Unable to Marshal EPMessage")
 		return err
 	}
 

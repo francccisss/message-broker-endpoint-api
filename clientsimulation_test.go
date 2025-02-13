@@ -72,7 +72,10 @@ func consumers(tag int) {
 	msg := ch.Consume("route")
 
 	fmt.Printf("TEST_NOTIF: Consumer #%d Waiting for message to consume\n", tag)
-	m := <-msg
-	fmt.Printf("TEST_NOTIF: Received Message from route: %s\n", string(m.Body))
+	for {
+		m := <-msg
+		fmt.Printf("TEST_NOTIF: Received Message from MQ: %s\n", string(m.StreamID))
+		fmt.Printf("TEST_NOTIF: Received Message from MQ: %s\n", string(m.Body))
+	}
 
 }

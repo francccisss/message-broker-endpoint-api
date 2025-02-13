@@ -27,7 +27,7 @@ func mudem(c *clientConnection) {
 	// from the HandleIncomingMessage()
 	for {
 		msg := <-msgChan
-		go dispatchMessage(msg, &c.streamPool)
+		go dispatchMessageToChannel(msg, &c.streamPool)
 	}
 }
 
@@ -37,7 +37,7 @@ each channel is bound to a specific stream, the stream will contain
 the a pointer to the channel, messages will be pushed into the channel's
 channel buffer
 */
-func dispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChannel) {
+func dispatchMessageToChannel(incomingMessage []byte, streamPool *map[string]*ClientChannel) {
 	fmt.Println("NOTIF: Dispatching message...")
 
 	msg, err := utils.MessageParser(incomingMessage)
@@ -62,7 +62,11 @@ func dispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChann
 			fmt.Println(err.Error())
 			break
 		}
+
+		fmt.Println("Passing epMsg to Channel's channel buffer:")
 		chann.chanBuff <- epMsg
+		fmt.Println("Messagbe passed")
+
 	case utils.ErrorMessage:
 		fmt.Println(m.MessageType)
 	default:

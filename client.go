@@ -70,7 +70,7 @@ func (c *clientConnection) CreateChannel() (Channel, error) {
 		ch = &ClientChannel{
 			StreamID: newStreamID,
 			conn:     c.conn,
-			chanBuff: make(chan utils.EPMessage),
+			chanBuff: make(chan utils.EPMessage, 10),
 		}
 		c.streamPool[newStreamID] = ch
 	}
