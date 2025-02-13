@@ -9,7 +9,7 @@ import (
 	"math"
 	"net"
 
-	"github.com/francccisss/msbq-client-api/internal/utils"
+	"github.com/francccisss/msbq-client-api/utils"
 )
 
 const READ_SIZE = 1024
@@ -18,6 +18,7 @@ const HEADER_SIZE = 4
 // Multiplexer/Demultiplexer takes in the socket connection
 // Mudem will handle the demultiplexing of messages from incoming tcp connection
 // using message dispatch based on the message's type
+
 func mudem(c *clientConnection) {
 	msgChan := make(chan []byte)
 	go HandleIncomingMessage(c.conn, msgChan)

@@ -7,7 +7,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/francccisss/msbq-client-api/internal/utils"
+	"github.com/francccisss/msbq-client-api/utils"
 )
 
 type ClientChannel struct {
