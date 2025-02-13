@@ -1,4 +1,4 @@
-package msbqclient
+package utils
 
 type Queue struct {
 	MessageType string

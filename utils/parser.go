@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/francccisss/msbq-client-api/internal/types"
 	"log"
 )
 
@@ -35,21 +34,21 @@ func MessageParser(message []byte) (interface{}, error) {
 
 	switch tmp["MessageType"] {
 	case "EPMessage":
-		var epMsg types.EPMessage
+		var epMsg EPMessage
 		err := json.Unmarshal(message, &epMsg)
 		if err != nil {
 			return nil, err
 		}
 		return epMsg, nil
 	case "Queue":
-		var qMsg types.Queue
+		var qMsg Queue
 		err := json.Unmarshal(message, &qMsg)
 		if err != nil {
 			return nil, err
 		}
 		return qMsg, nil
 	case "ErrorMessage":
-		var errMsg types.ErrorMessage
+		var errMsg ErrorMessage
 		err := json.Unmarshal(message, &errMsg)
 		if err != nil {
 			return nil, err

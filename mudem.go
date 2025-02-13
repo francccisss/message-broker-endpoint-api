@@ -49,21 +49,21 @@ func dispatchMessage(incomingMessage []byte, streamPool *map[string]*ClientChann
 	// Type assertion to marashal incoming json stream as
 	// concrete type defined in the package's message types
 	switch m := msg.(type) {
-	case EPMessage:
+	case utils.EPMessage:
 		chann, exists := (*streamPool)[m.StreamID]
 		if !exists {
 			fmt.Println("NOTIF: Stream does not exist")
 			fmt.Println("NOTIF: Do nothing")
 			return
 		}
-		var epMsg EPMessage
+		var epMsg utils.EPMessage
 		err := json.Unmarshal(incomingMessage, &epMsg)
 		if err != nil {
 			fmt.Println(err.Error())
 			break
 		}
 		chann.chanBuff <- epMsg
-	case ErrorMessage:
+	case utils.ErrorMessage:
 		fmt.Println(m.MessageType)
 	default:
 		fmt.Println("ERROR: Unidentified type")

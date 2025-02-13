@@ -14,13 +14,13 @@ type ClientChannel struct {
 	StreamID string
 	BoundTo  string
 	conn     net.Conn
-	chanBuff chan EPMessage
+	chanBuff chan utils.EPMessage
 }
 
 type Channel interface {
 	AssertQueue(Name string, Type string, Durable bool) (string, error)
 	DeliverMessage(Route string, Message []byte, QueueType string) error
-	Consume(route string) <-chan EPMessage
+	Consume(route string) <-chan utils.EPMessage
 	CloseChannel()
 }
 
@@ -37,7 +37,7 @@ func (ch ClientChannel) AssertQueue(Name string, Type string, Durable bool) (str
 
 	// TODO Something wrong with this, server is not able to parse
 	// message from queue assertion for some reason
-	q := Queue{
+	q := utils.Queue{
 		Name:        Name,
 		MessageType: "Queue",
 		Type:        Type,
@@ -74,8 +74,8 @@ Do i need QueueType??
 */
 func (ch ClientChannel) DeliverMessage(Route string, Message []byte, QueueType string) error {
 	defer fmt.Println("NOTIF: Message delivered!")
-	emsg := EPMessage{
-		MessageType: "EPMessage",
+	emsg := utils.EPMessage{
+		MessageType: "utils.EPMessage",
 		Route:       Route,
 		Type:        QueueType,
 		Body:        Message,
@@ -84,7 +84,7 @@ func (ch ClientChannel) DeliverMessage(Route string, Message []byte, QueueType s
 
 	body, err := json.Marshal(emsg)
 	if err != nil {
-		fmt.Println("ERROR: Unable to Marshal EPMessage")
+		fmt.Println("ERROR: Unable to Marshal utils.EPMessage")
 		return err
 	}
 
@@ -115,7 +115,7 @@ type Consumer struct {
 // each stream in the table is a pointer to a specific channel, the channel will then
 // push the incoming messages into the stream which then pushes the message into the
 // the channel's channel buffer
-func (ch *ClientChannel) Consume(route string) <-chan EPMessage {
+func (ch *ClientChannel) Consume(route string) <-chan utils.EPMessage {
 	fmt.Printf("NOTIF: Consuming from \"%s\" \n", route)
 	// implement some functionality to listen to a specific route
 	// a channel can have multiple consumers, which can listen to different routes

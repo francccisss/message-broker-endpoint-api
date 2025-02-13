@@ -2,8 +2,10 @@ package msbqclient
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"net"
+
+	"github.com/francccisss/msbq-client-api/utils"
+	"github.com/google/uuid"
 )
 
 const (
@@ -68,7 +70,7 @@ func (c *clientConnection) CreateChannel() (Channel, error) {
 		ch = &ClientChannel{
 			StreamID: newStreamID,
 			conn:     c.conn,
-			chanBuff: make(chan EPMessage),
+			chanBuff: make(chan utils.EPMessage),
 		}
 		c.streamPool[newStreamID] = ch
 	}
